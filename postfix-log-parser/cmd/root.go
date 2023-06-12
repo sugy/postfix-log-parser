@@ -60,7 +60,7 @@ func NewCmdRoot() *cobra.Command {
 				if err != nil {
 					cmd.SetOutput(os.Stderr)
 					cmd.Println(err)
-					os.Exit(1)
+					continue
 				}
 
 				/*

@@ -1,6 +1,7 @@
 package postfixlog
 
 import (
+	"fmt"
 	"regexp"
 	"time"
 )
@@ -44,30 +45,34 @@ func NewPostfixLog() *PostfixLog {
 }
 
 func (p *PostfixLog) Parse(text []byte) (LogFormat, error) {
-	re := p.Regexp.Copy()
-	group := re.FindSubmatch(text)
-	var t time.Time
-	t, err := time.ParseInLocation(TimeFormat, string(group[1]), time.Local)
-	if err != nil {
-		t, err = time.ParseInLocation(TimeFormatISO8601, string(group[1]), time.Local)
+	group := p.Regexp.FindStringSubmatch(string(text))
+
+	if len(group) > 0 {
+		var t time.Time
+		t, err := time.ParseInLocation(TimeFormat, string(group[1]), time.Local)
 		if err != nil {
-			return LogFormat{}, err
+			t, err = time.ParseInLocation(TimeFormatISO8601, string(group[1]), time.Local)
+			if err != nil {
+				return LogFormat{}, err
+			}
 		}
-	}
 
-	logFormat := LogFormat{
-		Time:           &t,
-		Hostname:       string(group[2]),
-		Process:        string(group[3]),
-		QueueId:        string(group[4]),
-		Messages:       string(group[5]),
-		ClientHostname: string(group[6]),
-		ClinetIp:       string(group[7]),
-		MessageId:      string(group[8]),
-		From:           string(group[9]),
-		To:             string(group[10]),
-		Status:         string(group[11]),
-	}
+		logFormat := LogFormat{
+			Time:           &t,
+			Hostname:       string(group[2]),
+			Process:        string(group[3]),
+			QueueId:        string(group[4]),
+			Messages:       string(group[5]),
+			ClientHostname: string(group[6]),
+			ClinetIp:       string(group[7]),
+			MessageId:      string(group[8]),
+			From:           string(group[9]),
+			To:             string(group[10]),
+			Status:         string(group[11]),
+		}
 
-	return logFormat, nil
+		return logFormat, nil
+	} else {
+		return LogFormat{}, fmt.Errorf("parse error: text='%s'", text)
+	}
 }
